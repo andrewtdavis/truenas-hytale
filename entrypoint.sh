@@ -5,16 +5,88 @@ mkdir -p /data/state /data/config /data/universe /data/backups
 
 cd /data/state
 
-if [[ "${HYTALE_AUTO_UPDATE:-true}" == "true" ]]; then
+find_latest_zip() {
+  find /data/state -maxdepth 1 -type f -name '*.zip' -printf '%T@ %p\n' | sort -nr | head -n1 | awk '{print $2}'
+}
+
+extract_version_from_zip_path() {
+  local zip_path="$1"
+  local name
+  name="$(basename "$zip_path")"
+  echo "${name%.zip}"
+}
+
+extract_hash_from_version() {
+  local version="$1"
+  if [[ "$version" =~ -([0-9a-fA-F]+)$ ]]; then
+    echo "${BASH_REMATCH[1],,}"
+  fi
+}
+
+get_latest_remote_version() {
+  local patchline="$1"
+  local url="${HYTALE_VERSION_CHECK_URL:-https://hytaleversions.io/}"
+  local html section
+
+  html="$(curl -fsSL "$url")" || return 1
+
+  if [[ "$patchline" == "release" ]]; then
+    section="$(awk '/### Stable Releases/{flag=1; next} /### Pre-Releases/{flag=0} flag {print}' <<< "$html")"
+  else
+    section="$(awk '/### Pre-Releases/{flag=1; next} /## Frequently Asked Questions/{flag=0} flag {print}' <<< "$html")"
+  fi
+
+  grep -Eo '[0-9]{4}\.[0-9]{2}\.[0-9]{2}-[0-9a-f]+' <<< "$section" | head -n1
+}
+
+download_server() {
   if [[ "${HYTALE_PATCHLINE:-release}" == "release" ]]; then
     /opt/hytale/hytale-downloader
   else
     /opt/hytale/hytale-downloader -patchline "${HYTALE_PATCHLINE}"
   fi
+}
+
+if [[ "${HYTALE_AUTO_UPDATE:-true}" == "true" ]]; then
+  latest_zip="$(find_latest_zip || true)"
+  local_version=""
+  local_hash=""
+  remote_version=""
+  remote_hash=""
+
+  if [[ -n "${latest_zip:-}" ]]; then
+    local_version="$(extract_version_from_zip_path "$latest_zip")"
+    local_hash="$(extract_hash_from_version "$local_version" || true)"
+  fi
+
+  normalized_patchline="${HYTALE_PATCHLINE:-release}"
+  normalized_patchline="${normalized_patchline,,}"
+  if [[ "$normalized_patchline" == *"pre"* ]]; then
+    normalized_patchline="pre-release"
+  else
+    normalized_patchline="release"
+  fi
+
+  if [[ "${HYTALE_CHECK_REMOTE_VERSION:-true}" == "true" ]]; then
+    remote_version="$(get_latest_remote_version "$normalized_patchline" || true)"
+    remote_hash="$(extract_hash_from_version "$remote_version" || true)"
+  fi
+
+  if [[ -n "${local_hash:-}" && -n "${remote_hash:-}" && "$local_hash" == "$remote_hash" ]]; then
+    echo "Local archive hash matches latest $normalized_patchline hash ($remote_hash), skipping download."
+  elif [[ "${HYTALE_CHECK_REMOTE_VERSION:-true}" == "true" && -z "${remote_hash:-}" ]]; then
+    echo "Could not read remote version; downloading server files as fail-safe."
+    download_server
+  elif [[ "${HYTALE_CHECK_REMOTE_VERSION:-true}" != "true" && "${HYTALE_SKIP_DOWNLOAD_IF_PRESENT:-true}" == "true" && -n "${latest_zip:-}" ]]; then
+    echo "Remote version check disabled and existing archive found, skipping download: $latest_zip"
+  else
+    echo "Local archive hash differs from latest $normalized_patchline hash, downloading updates."
+    download_server
+  fi
 fi
 
 if [[ ! -d /data/state/Server || ! -f /data/state/Assets.zip ]]; then
-  latest_zip="$(find /data/state -maxdepth 1 -type f -name '*.zip' -printf '%T@ %p\n' | sort -nr | head -n1 | awk '{print $2}')"
+  latest_zip="$(find_latest_zip || true)"
   if [[ -z "${latest_zip:-}" ]]; then
     echo "No game zip found in /data/state and required files are missing (Server/, Assets.zip)." >&2
     exit 1
