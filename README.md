@@ -23,7 +23,7 @@ Replace `POOL` with your actual pool name.
 
 Current public image:
 
-- `ghcr.io/andrewtdavis/truenas-hytale:v0.1.1`
+- `ghcr.io/andrewtdavis/truenas-hytale:v0.1.2`
 
 ## Build and Push the Image (Podman Desktop + GHCR)
 
@@ -142,6 +142,17 @@ Container paths:
 - `/data/backups`: persisted backup output from `--backup-dir /data/backups`.
 
 The entrypoint script symlinks config/universe into the server directory.
+
+## Select World File at Startup
+
+You can pass a specific world file path via environment variables:
+
+- `HYTALE_WORLD_FILE`: file path relative to container root (example: `data/universe/my-world.json`)
+- `HYTALE_WORLD_FLAG`: CLI flag used with that file path (default: `--world`)
+
+The startup script normalizes relative paths by adding `/`, so `data/universe/my-world.json` becomes `/data/universe/my-world.json`.
+
+If your server version uses a different CLI option name for world selection, set `HYTALE_WORLD_FLAG` to that option or use `HYTALE_WORLD_ARGS` for custom world-related arguments.
 
 ## Updates (Game Patches)
 

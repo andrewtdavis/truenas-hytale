@@ -135,8 +135,42 @@ if [[ -d universe && ! -L universe ]]; then
 fi
 ln -sfn /data/universe universe
 
-exec java -XX:AOTCache=HytaleServer.aot ${JAVA_OPTS:-"-Xms4G -Xmx4G"} \
-  -jar HytaleServer.jar \
-  --assets ../Assets.zip \
-  --bind "${HYTALE_BIND:-0.0.0.0:5520}" \
-  ${HYTALE_EXTRA_ARGS:-}
+world_file_arg=()
+if [[ -n "${HYTALE_WORLD_FILE:-}" ]]; then
+  world_path="${HYTALE_WORLD_FILE}"
+  if [[ "$world_path" != /* ]]; then
+    world_path="/$world_path"
+  fi
+  world_file_arg=("${HYTALE_WORLD_FLAG:---world}" "$world_path")
+fi
+
+# Intentionally split option strings into arguments.
+# shellcheck disable=SC2206
+java_opts=( ${JAVA_OPTS:-"-Xms4G -Xmx4G"} )
+
+cmd=(
+  java
+  -XX:AOTCache=HytaleServer.aot
+  "${java_opts[@]}"
+  -jar HytaleServer.jar
+  --assets ../Assets.zip
+  --bind "${HYTALE_BIND:-0.0.0.0:5520}"
+)
+
+if [[ ${#world_file_arg[@]} -gt 0 ]]; then
+  cmd+=("${world_file_arg[@]}")
+fi
+
+if [[ -n "${HYTALE_WORLD_ARGS:-}" ]]; then
+  # shellcheck disable=SC2206
+  world_args=( ${HYTALE_WORLD_ARGS} )
+  cmd+=("${world_args[@]}")
+fi
+
+if [[ -n "${HYTALE_EXTRA_ARGS:-}" ]]; then
+  # shellcheck disable=SC2206
+  extra_args=( ${HYTALE_EXTRA_ARGS} )
+  cmd+=("${extra_args[@]}")
+fi
+
+exec "${cmd[@]}"
