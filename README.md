@@ -21,6 +21,10 @@ TrueNAS SCALE custom app base for running a Hytale server in Docker, with persis
 
 Replace `POOL` with your actual pool name.
 
+Current public image:
+
+- `ghcr.io/andrewtdavis/truenas-hytale:v0.1.1`
+
 ## Build and Push the Image (Podman Desktop + GHCR)
 
 You can do this entirely from Podman Desktop after signing in to GitHub:
@@ -29,7 +33,7 @@ You can do this entirely from Podman Desktop after signing in to GitHub:
 2. Set **Build context** to this repo folder (`truenas-hytale`).
 3. Set **Dockerfile path** to `Dockerfile`.
 4. Set image name to a lowercase GHCR path, for example:
-   - `ghcr.io/YOUR_GITHUB_USERNAME/hytale-server:latest`
+   - `ghcr.io/YOUR_GITHUB_USERNAME/truenas-hytale:latest`
 5. Build the image.
 6. In **Images**, select the built image and click **Push**.
 7. Push to `ghcr.io` (keep the same tag above).
@@ -39,15 +43,15 @@ If Podman Desktop already has your GitHub auth configured, it will use that for 
 Equivalent CLI commands from this repo:
 
 ```bash
-podman build -t ghcr.io/YOUR_GITHUB_USERNAME/hytale-server:latest .
-podman push ghcr.io/YOUR_GITHUB_USERNAME/hytale-server:latest
+podman build -t ghcr.io/YOUR_GITHUB_USERNAME/truenas-hytale:latest .
+podman push ghcr.io/YOUR_GITHUB_USERNAME/truenas-hytale:latest
 ```
 
 Recommended: also publish a version tag:
 
 ```bash
-podman tag ghcr.io/YOUR_GITHUB_USERNAME/hytale-server:latest ghcr.io/YOUR_GITHUB_USERNAME/hytale-server:v0.1.0
-podman push ghcr.io/YOUR_GITHUB_USERNAME/hytale-server:v0.1.0
+podman tag ghcr.io/YOUR_GITHUB_USERNAME/truenas-hytale:latest ghcr.io/YOUR_GITHUB_USERNAME/truenas-hytale:v0.1.0
+podman push ghcr.io/YOUR_GITHUB_USERNAME/truenas-hytale:v0.1.0
 ```
 
 Then update `image:` in `truenas-custom-app.yaml` to your registry/repo path.
@@ -71,13 +75,13 @@ ghcr.io/<github-owner>/<repo-name>:latest
 Example for this repo with an explicit image name:
 
 ```powershell
-.\build-and-push.ps1 -ImageName hytale-server -Tag latest -AlsoTagCommit
+.\build-and-push.ps1 -ImageName truenas-hytale -Tag latest -AlsoTagCommit
 ```
 
 That example publishes:
 
-- `ghcr.io/andrewtdavis/hytale-server:latest`
-- `ghcr.io/andrewtdavis/hytale-server:git-<shortsha>`
+- `ghcr.io/andrewtdavis/truenas-hytale:latest`
+- `ghcr.io/andrewtdavis/truenas-hytale:git-<shortsha>`
 
 Notes:
 
@@ -101,16 +105,32 @@ If your firewall is enabled, allow inbound UDP 5520 to the TrueNAS host.
 
 ## First Start and Authentication
 
-On first run, complete account authentication from the server console:
+Your log line `Hytale Server Booted!` means the server started correctly.
 
-1. Open container logs/shell in TrueNAS.
-2. Run:
+If logs show `No server tokens configured. Use /auth login to authenticate.`, complete auth from the TrueNAS shell:
+
+1. Follow logs:
+
+```bash
+docker logs -f hytale-server
+```
+
+2. Attach to the server console:
+
+```bash
+docker attach hytale-server
+```
+
+3. Run auth in the server console:
 
 ```bash
 /auth login device
 ```
 
-3. Follow the device-code URL and code prompts.
+4. Follow the device-code URL and code prompts.
+5. Detach from console without stopping server: press `Ctrl+P`, then `Ctrl+Q`.
+
+If your container name differs, replace `hytale-server` in the commands above.
 
 ## Data Layout
 

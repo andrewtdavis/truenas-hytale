@@ -1,6 +1,6 @@
 services:
   hytale:
-    image: ghcr.io/YOURORG/hytale-server:latest
+    image: ghcr.io/andrewtdavis/truenas-hytale:v0.1.1
     container_name: hytale-server
     user: "568:568"
     restart: unless-stopped
