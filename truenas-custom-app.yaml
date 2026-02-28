@@ -1,0 +1,25 @@
+services:
+  hytale:
+    image: ghcr.io/YOURORG/hytale-server:latest
+    container_name: hytale-server
+    user: "568:568"
+    restart: unless-stopped
+    stop_grace_period: 90s
+    stdin_open: true
+    tty: true
+
+    environment:
+      TZ: "America/Los_Angeles"
+      JAVA_OPTS: "-Xms4G -Xmx8G"
+      HYTALE_BIND: "0.0.0.0:5520"
+      HYTALE_AUTO_UPDATE: "true"
+      HYTALE_PATCHLINE: "release"
+      HYTALE_EXTRA_ARGS: "--backup --backup-dir /data/backups --backup-frequency 30"
+
+    ports:
+      - "5520:5520/udp"
+
+    volumes:
+      - /mnt/POOL/hytale/state:/data/state
+      - /mnt/POOL/hytale/config:/data/config
+      - /mnt/POOL/hytale/universe:/data/universe
