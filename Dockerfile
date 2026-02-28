@@ -7,6 +7,7 @@ RUN apt-get update \
 RUN mkdir -p /opt/hytale /data/state /data/config /data/universe /data/backups \
  && curl -fsSL -o /tmp/hytale-downloader.zip https://downloader.hytale.com/hytale-downloader.zip \
  && unzip /tmp/hytale-downloader.zip -d /opt/hytale \
+ && mv /opt/hytale/hytale-downloader-linux-* /opt/hytale/hytale-downloader \
  && chmod +x /opt/hytale/hytale-downloader \
  && rm -f /tmp/hytale-downloader.zip
 

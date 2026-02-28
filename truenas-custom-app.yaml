@@ -23,3 +23,4 @@ services:
       - /mnt/POOL/hytale/state:/data/state
       - /mnt/POOL/hytale/config:/data/config
       - /mnt/POOL/hytale/universe:/data/universe
+      - /mnt/POOL/hytale/backups:/data/backups

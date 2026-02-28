@@ -49,6 +49,18 @@ function Ensure-GhcrLogin {
   }
 }
 
+function Invoke-Podman {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string[]]$Args
+  )
+
+  & podman @Args
+  if ($LASTEXITCODE -ne 0) {
+    throw "podman $($Args -join ' ') failed with exit code $LASTEXITCODE"
+  }
+}
+
 Ensure-Podman
 $origin = Get-OriginUrl
 $repoInfo = Parse-GitHubRemote -RemoteUrl $origin
@@ -62,10 +74,10 @@ $image = "{0}/{1}/{2}:{3}" -f $Registry.ToLowerInvariant(), $repoInfo.Owner, $Im
 Ensure-GhcrLogin -RegistryHost $Registry
 
 Write-Host "Building image: $image"
-podman build -t $image .
+Invoke-Podman -Args @("build", "-t", $image, ".")
 
 Write-Host "Pushing image: $image"
-podman push $image
+Invoke-Podman -Args @("push", $image)
 
 if ($AlsoTagCommit) {
   $sha = (git rev-parse --short HEAD).Trim().ToLowerInvariant()
@@ -75,10 +87,10 @@ if ($AlsoTagCommit) {
 
   $commitImage = "{0}/{1}/{2}:git-{3}" -f $Registry.ToLowerInvariant(), $repoInfo.Owner, $ImageName.ToLowerInvariant(), $sha
   Write-Host "Tagging commit image: $commitImage"
-  podman tag $image $commitImage
+  Invoke-Podman -Args @("tag", $image, $commitImage)
 
   Write-Host "Pushing commit image: $commitImage"
-  podman push $commitImage
+  Invoke-Podman -Args @("push", $commitImage)
 }
 
 Write-Host "Done."

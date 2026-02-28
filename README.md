@@ -13,10 +13,11 @@ TrueNAS SCALE custom app base for running a Hytale server in Docker, with persis
 
 - TrueNAS SCALE with Apps enabled.
 - A container registry you can push to (GHCR, Docker Hub, etc.).
-- Three datasets (or directories) on your pool:
+- Four datasets (or directories) on your pool:
   - `/mnt/POOL/hytale/state`
   - `/mnt/POOL/hytale/config`
   - `/mnt/POOL/hytale/universe`
+  - `/mnt/POOL/hytale/backups`
 
 Replace `POOL` with your actual pool name.
 
@@ -118,6 +119,7 @@ Container paths:
 - `/data/state`: downloaded server files and runtime data.
 - `/data/config`: persisted JSON config files (`config.json`, `permissions.json`, etc.).
 - `/data/universe`: persisted game world/universe data.
+- `/data/backups`: persisted backup output from `--backup-dir /data/backups`.
 
 The entrypoint script symlinks config/universe into the server directory.
 
