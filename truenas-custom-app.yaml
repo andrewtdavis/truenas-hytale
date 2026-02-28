@@ -1,6 +1,6 @@
 services:
   hytale:
-    image: ghcr.io/andrewtdavis/truenas-hytale:v0.1.2
+    image: ghcr.io/andrewtdavis/truenas-hytale:v0.1.3
     container_name: hytale-server
     user: "568:568"
     restart: unless-stopped
@@ -26,3 +26,4 @@ services:
       - /mnt/POOL/hytale/config:/data/config
       - /mnt/POOL/hytale/universe:/data/universe
       - /mnt/POOL/hytale/backups:/data/backups
+      - /etc/machine-id:/etc/machine-id:ro

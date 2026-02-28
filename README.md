@@ -23,7 +23,7 @@ Replace `POOL` with your actual pool name.
 
 Current public image:
 
-- `ghcr.io/andrewtdavis/truenas-hytale:v0.1.2`
+- `ghcr.io/andrewtdavis/truenas-hytale:v0.1.3`
 
 ## Build and Push the Image (Podman Desktop + GHCR)
 
@@ -50,8 +50,8 @@ podman push ghcr.io/YOUR_GITHUB_USERNAME/truenas-hytale:latest
 Recommended: also publish a version tag:
 
 ```bash
-podman tag ghcr.io/YOUR_GITHUB_USERNAME/truenas-hytale:latest ghcr.io/YOUR_GITHUB_USERNAME/truenas-hytale:v0.1.0
-podman push ghcr.io/YOUR_GITHUB_USERNAME/truenas-hytale:v0.1.0
+podman tag ghcr.io/YOUR_GITHUB_USERNAME/truenas-hytale:latest ghcr.io/YOUR_GITHUB_USERNAME/truenas-hytale:v0.1.3
+podman push ghcr.io/YOUR_GITHUB_USERNAME/truenas-hytale:v0.1.3
 ```
 
 Then update `image:` in `truenas-custom-app.yaml` to your registry/repo path.
@@ -131,6 +131,14 @@ docker attach hytale-server
 5. Detach from console without stopping server: press `Ctrl+P`, then `Ctrl+Q`.
 
 If your container name differs, replace `hytale-server` in the commands above.
+
+For auth persistence mode `Encrypted`, mount a stable machine-id from host:
+
+```yaml
+- /etc/machine-id:/etc/machine-id:ro
+```
+
+Without this, the server may fall back to memory-only credentials and require `/auth login device` after every restart.
 
 ## Data Layout
 
