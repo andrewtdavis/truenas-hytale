@@ -7,6 +7,7 @@ TrueNAS SCALE custom app base for running a Hytale server in Docker, with persis
 - `Dockerfile`: Builds a Java 25-based Hytale server image.
 - `entrypoint.sh`: Downloads/updates server files on start, then launches the server.
 - `truenas-custom-app.yaml`: Base Compose-style YAML for TrueNAS custom app install.
+- `build-and-push.ps1`: Builds and pushes to GHCR using repo metadata from `.git`.
 
 ## Prerequisites
 
@@ -19,16 +20,68 @@ TrueNAS SCALE custom app base for running a Hytale server in Docker, with persis
 
 Replace `POOL` with your actual pool name.
 
-## Build and Push the Image
+## Build and Push the Image (Podman Desktop + GHCR)
 
-From this repo:
+You can do this entirely from Podman Desktop after signing in to GitHub:
+
+1. Open Podman Desktop -> **Images** -> **Build image**.
+2. Set **Build context** to this repo folder (`truenas-hytale`).
+3. Set **Dockerfile path** to `Dockerfile`.
+4. Set image name to a lowercase GHCR path, for example:
+   - `ghcr.io/YOUR_GITHUB_USERNAME/hytale-server:latest`
+5. Build the image.
+6. In **Images**, select the built image and click **Push**.
+7. Push to `ghcr.io` (keep the same tag above).
+
+If Podman Desktop already has your GitHub auth configured, it will use that for GHCR. If push prompts for credentials, use a GitHub PAT with `write:packages`.
+
+Equivalent CLI commands from this repo:
 
 ```bash
-docker build -t ghcr.io/YOURORG/hytale-server:latest .
-docker push ghcr.io/YOURORG/hytale-server:latest
+podman build -t ghcr.io/YOUR_GITHUB_USERNAME/hytale-server:latest .
+podman push ghcr.io/YOUR_GITHUB_USERNAME/hytale-server:latest
 ```
 
-Update `image:` in `truenas-custom-app.yaml` to your registry/repo path.
+Recommended: also publish a version tag:
+
+```bash
+podman tag ghcr.io/YOUR_GITHUB_USERNAME/hytale-server:latest ghcr.io/YOUR_GITHUB_USERNAME/hytale-server:v0.1.0
+podman push ghcr.io/YOUR_GITHUB_USERNAME/hytale-server:v0.1.0
+```
+
+Then update `image:` in `truenas-custom-app.yaml` to your registry/repo path.
+
+## Automated Build/Push Script (Podman + Git Metadata)
+
+Use `build-and-push.ps1` to auto-detect owner/repo from `git origin`, then run `podman build` and `podman push`.
+
+From this repo (PowerShell):
+
+```powershell
+.\build-and-push.ps1
+```
+
+By default this publishes:
+
+```text
+ghcr.io/<github-owner>/<repo-name>:latest
+```
+
+Example for this repo with an explicit image name:
+
+```powershell
+.\build-and-push.ps1 -ImageName hytale-server -Tag latest -AlsoTagCommit
+```
+
+That example publishes:
+
+- `ghcr.io/andrewtdavis/hytale-server:latest`
+- `ghcr.io/andrewtdavis/hytale-server:git-<shortsha>`
+
+Notes:
+
+- The script requires an existing `podman login ghcr.io` session. If you already signed in via Podman Desktop, that is typically sufficient.
+- CLI pushes and Podman Desktop use the same local engine/session, so pushed images are visible in Podman Desktop.
 
 ## TrueNAS Custom App Install
 
